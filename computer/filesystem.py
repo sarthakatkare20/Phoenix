@@ -9,8 +9,8 @@ import subprocess
 import time
 from typing import List, Optional, Set, Tuple
 
-from .models import ComputerActionResult, ComputerVerificationResult
-from ..config import settings
+from computer.models import ComputerActionResult, ComputerVerificationResult
+from config import settings
 
 logger = logging.getLogger("paaro.computer.filesystem")
 

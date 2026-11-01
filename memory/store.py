@@ -11,7 +11,7 @@ import threading
 import time
 from typing import Any, Dict, List, Optional
 
-from .models import ConversationTurn, Memory, MemoryCategory, Session, TurnStatus
+from memory.models import ConversationTurn, Memory, MemoryCategory, Session, TurnStatus
 
 logger = logging.getLogger("paaro.memory.store")
 

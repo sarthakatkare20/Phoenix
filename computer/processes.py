@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 import psutil
 
-from .models import (
+from computer.models import (
     ComputerActionResult,
     ComputerVerificationResult,
     ProcessInfo,

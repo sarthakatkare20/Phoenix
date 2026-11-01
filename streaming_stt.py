@@ -15,7 +15,7 @@ try:
 except ImportError:
     WhisperModel = None
 
-from .config import PaaroSettings, settings
+from config import PaaroSettings, settings
 
 logger = logging.getLogger("paaro.stt")
 

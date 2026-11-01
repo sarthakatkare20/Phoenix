@@ -3,7 +3,7 @@ Paaro Computer Control Subsystem (Step 9).
 Provides safe, deterministic, policy-governed local computer control.
 """
 
-from .models import (
+from computer.models import (
     ComputerActionType,
     ComputerAction,
     ComputerActionResult,
@@ -12,11 +12,11 @@ from .models import (
     ProcessInfo,
     SystemStateInfo,
 )
-from .apps import ApplicationRegistry
-from .filesystem import SafePathResolver
-from .urls import SafeUrlOpener
-from .processes import ProcessController
-from .controller import ComputerController
+from computer.apps import ApplicationRegistry
+from computer.filesystem import SafePathResolver
+from computer.urls import SafeUrlOpener
+from computer.processes import ProcessController
+from computer.controller import ComputerController
 
 # Default shared controller instance
 computer_controller = ComputerController()

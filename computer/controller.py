@@ -7,7 +7,7 @@ import logging
 import time
 from typing import Any, Callable, Dict, List, Optional
 
-from .models import (
+from computer.models import (
     AppInfo,
     ComputerAction,
     ComputerActionResult,
@@ -16,11 +16,11 @@ from .models import (
     ProcessInfo,
     SystemStateInfo,
 )
-from .apps import ApplicationRegistry
-from .filesystem import SafePathResolver
-from .urls import SafeUrlOpener
-from .processes import ProcessController
-from ..config import PaaroSettings, settings
+from computer.apps import ApplicationRegistry
+from computer.filesystem import SafePathResolver
+from computer.urls import SafeUrlOpener
+from computer.processes import ProcessController
+from config import PaaroSettings, settings
 
 logger = logging.getLogger("paaro.computer.controller")
 

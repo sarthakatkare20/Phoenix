@@ -7,9 +7,9 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 
-from .models import ExecutionPlan, PlanStatus, PlanStep, StepStatus
-from .planner import PlanValidator
-from ..streaming_llm import StreamingLLM
+from reasoning.models import ExecutionPlan, PlanStatus, PlanStep, StepStatus
+from reasoning.planner import PlanValidator
+from streaming_llm import StreamingLLM
 
 logger = logging.getLogger("paaro.reasoning.replanner")
 

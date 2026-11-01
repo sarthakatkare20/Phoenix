@@ -9,7 +9,7 @@ import logging
 import threading
 from typing import Any, Callable, Dict, List, Optional, Set
 
-from .events import ProactiveEvent
+from proactive.events import ProactiveEvent
 
 logger = logging.getLogger("paaro.proactive.event_bus")
 

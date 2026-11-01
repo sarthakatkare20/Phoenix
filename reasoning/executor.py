@@ -8,9 +8,9 @@ import logging
 import time
 from typing import Any, Callable, Dict, List, Optional
 
-from .models import ExecutionPlan, PlanStatus, PlanStep, StepResult, StepStatus
-from ..security import SecurityContext, security_context
-from ..tool_gateway import PolicyDecision, ToolGateway, tool_gateway
+from reasoning.models import ExecutionPlan, PlanStatus, PlanStep, StepResult, StepStatus
+from security import SecurityContext, security_context
+from tool_gateway import PolicyDecision, ToolGateway, tool_gateway
 
 logger = logging.getLogger("paaro.reasoning.executor")
 
@@ -29,7 +29,7 @@ class PlanExecutor:
         max_retries_per_step: int = 2,
         max_retries: Optional[int] = None,
     ):
-        from ..tool_gateway import tool_gateway as default_gw
+        from tool_gateway import tool_gateway as default_gw
         self.gateway = gateway or tool_gateway_instance or tool_gateway or default_gw
         self.security = security or security_context
         self.max_retries_per_step = max_retries if max_retries is not None else max_retries_per_step

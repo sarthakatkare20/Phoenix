@@ -9,7 +9,7 @@ import threading
 import time
 from typing import Any, Dict, Optional
 
-from .events import (
+from proactive.events import (
     EventSeverity,
     ProactiveDecision,
     ProactiveDecisionType,

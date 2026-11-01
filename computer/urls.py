@@ -10,7 +10,7 @@ from typing import Optional, Set, Tuple
 from urllib.parse import urlparse
 import webbrowser
 
-from .models import ComputerActionResult, ComputerVerificationResult
+from computer.models import ComputerActionResult, ComputerVerificationResult
 
 logger = logging.getLogger("paaro.computer.urls")
 

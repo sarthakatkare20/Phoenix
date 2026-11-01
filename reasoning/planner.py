@@ -9,9 +9,9 @@ import re
 import time
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from .models import ExecutionPlan, PlanStep, StepStatus
-from ..streaming_llm import StreamingLLM
-from ..tool_gateway import PolicyEngine, ToolGateway, tool_gateway
+from reasoning.models import ExecutionPlan, PlanStep, StepStatus
+from streaming_llm import StreamingLLM
+from tool_gateway import PolicyEngine, ToolGateway, tool_gateway
 
 logger = logging.getLogger("paaro.reasoning.planner")
 

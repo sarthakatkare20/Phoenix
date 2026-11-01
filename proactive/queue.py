@@ -7,7 +7,7 @@ import threading
 import time
 from typing import Any, Dict, List, Optional
 
-from .events import EventSeverity, ProactiveEvent
+from proactive.events import EventSeverity, ProactiveEvent
 
 logger = logging.getLogger("paaro.proactive.queue")
 

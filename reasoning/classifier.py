@@ -9,8 +9,8 @@ import re
 import time
 from typing import Optional
 
-from .models import TaskComplexity
-from ..streaming_llm import StreamingLLM
+from reasoning.models import TaskComplexity
+from streaming_llm import StreamingLLM
 
 logger = logging.getLogger("paaro.reasoning.classifier")
 

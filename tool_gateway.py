@@ -193,7 +193,7 @@ class ToolGateway:
         """Register handlers for all Step 9 Computer Control tools."""
         if controller is None:
             try:
-                from .computer import computer_controller
+                from computer import computer_controller
                 controller = computer_controller
             except ImportError:
                 logger.warning("paaro.computer module not available for tool registration")

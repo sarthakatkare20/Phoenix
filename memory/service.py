@@ -7,9 +7,9 @@ import re
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from .models import ConversationTurn, Memory, MemoryCategory, Session, TurnStatus
-from .retrieval import MemoryRetriever
-from .store import SQLiteMemoryStore
+from memory.models import ConversationTurn, Memory, MemoryCategory, Session, TurnStatus
+from memory.retrieval import MemoryRetriever
+from memory.store import SQLiteMemoryStore
 
 logger = logging.getLogger("paaro.memory.service")
 

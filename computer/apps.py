@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import psutil
 
-from .models import AppInfo, ComputerActionResult, ComputerVerificationResult
+from computer.models import AppInfo, ComputerActionResult, ComputerVerificationResult
 
 logger = logging.getLogger("paaro.computer.apps")
 

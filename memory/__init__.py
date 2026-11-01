@@ -3,17 +3,17 @@ Paaro Memory Subsystem (Step 6).
 Provides Short-Term Conversation Sessions, Long-Term Memory, and Context Assembly.
 """
 
-from .models import (
+from memory.models import (
     ConversationTurn,
     Memory,
     MemoryCategory,
     Session,
     TurnStatus,
 )
-from .store import SQLiteMemoryStore
-from .retrieval import MemoryRetriever
-from .service import MemoryService
-from .context import ContextBuilder
+from memory.store import SQLiteMemoryStore
+from memory.retrieval import MemoryRetriever
+from memory.service import MemoryService
+from memory.context import ContextBuilder
 
 __all__ = [
     "ConversationTurn",

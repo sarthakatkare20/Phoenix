@@ -10,18 +10,18 @@ import time
 from typing import Any, Callable, Dict, List, Optional
 import uuid
 
-from .events import (
+from proactive.events import (
     ProactiveDecision,
     ProactiveDecisionType,
     ProactiveEvent,
     UserActivityState,
 )
-from .evaluator import EventEvaluator
-from ..security import SecurityContext, security_context
-from ..tool_gateway import PolicyDecision, ToolGateway, tool_gateway
-from ..streaming_llm import StreamingLLM
-from ..kokoro_tts import StreamingTTS
-from ..memory.service import MemoryService
+from proactive.evaluator import EventEvaluator
+from security import SecurityContext, security_context
+from tool_gateway import PolicyDecision, ToolGateway, tool_gateway
+from streaming_llm import StreamingLLM
+from kokoro_tts import StreamingTTS
+from memory.service import MemoryService
 
 logger = logging.getLogger("paaro.proactive.brain")
 

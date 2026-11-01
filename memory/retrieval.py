@@ -8,7 +8,7 @@ import re
 import time
 from typing import List, Optional, Tuple
 
-from .models import Memory, MemoryCategory
+from memory.models import Memory, MemoryCategory
 
 # Category priority multipliers
 CATEGORY_WEIGHTS = {

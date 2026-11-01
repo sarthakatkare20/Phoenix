@@ -10,19 +10,19 @@ import time
 from typing import Any, Callable, Dict, List, Optional
 import uuid
 
-from .models import ExecutionPlan, PlanStatus, PlanStep, StepResult, StepStatus, TaskComplexity, VerificationResult
-from .classifier import TaskComplexityClassifier
-from .planner import PlanGenerator, PlanValidator
-from .executor import PlanExecutor
-from .verifier import PlanVerifier
-from .replanner import Replanner
-from ..config import PaaroSettings, settings
-from ..security import SecurityContext, security_context
-from ..tool_gateway import PolicyDecision, ToolGateway, tool_gateway
-from ..streaming_llm import StreamingLLM
-from ..kokoro_tts import StreamingTTS
-from ..memory.service import MemoryService
-from ..memory.models import TurnStatus
+from reasoning.models import ExecutionPlan, PlanStatus, PlanStep, StepResult, StepStatus, TaskComplexity, VerificationResult
+from reasoning.classifier import TaskComplexityClassifier
+from reasoning.planner import PlanGenerator, PlanValidator
+from reasoning.executor import PlanExecutor
+from reasoning.verifier import PlanVerifier
+from reasoning.replanner import Replanner
+from config import PaaroSettings, settings
+from security import SecurityContext, security_context
+from tool_gateway import PolicyDecision, ToolGateway, tool_gateway
+from streaming_llm import StreamingLLM
+from kokoro_tts import StreamingTTS
+from memory.service import MemoryService
+from memory.models import TurnStatus
 
 logger = logging.getLogger("paaro.reasoning.engine")
 

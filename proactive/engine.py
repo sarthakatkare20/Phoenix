@@ -9,18 +9,18 @@ import threading
 import time
 from typing import Any, Callable, Dict, List, Optional
 
-from .events import (
+from proactive.events import (
     EventSeverity,
     ProactiveDecision,
     ProactiveDecisionType,
     ProactiveEvent,
     UserActivityState,
 )
-from .event_bus import EventBus
-from .evaluator import EventEvaluator
-from .queue import ProactiveEventQueue
-from .brain import ProactiveBrain
-from ..config import PaaroSettings, settings
+from proactive.event_bus import EventBus
+from proactive.evaluator import EventEvaluator
+from proactive.queue import ProactiveEventQueue
+from proactive.brain import ProactiveBrain
+from config import PaaroSettings, settings
 
 logger = logging.getLogger("paaro.proactive.engine")
 

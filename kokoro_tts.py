@@ -23,10 +23,10 @@ try:
 except ImportError:
     pyttsx3 = None
 
-from .config import PaaroSettings, settings
-from .security import SecurityContext, security_context
-from .text_chunker import TextChunker
-from .audio_playback import AudioPlaybackQueue
+from config import PaaroSettings, settings
+from security import SecurityContext, security_context
+from text_chunker import TextChunker
+from audio_playback import AudioPlaybackQueue
 
 logger = logging.getLogger("paaro.tts")
 

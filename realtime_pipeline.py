@@ -11,18 +11,18 @@ import time
 from typing import Any, Callable, Dict, List, Optional
 import numpy as np
 
-from .config import PaaroSettings, settings
-from .security import SecurityContext, security_context
-from .silero_vad import SileroVAD
-from .speech_state_machine import SpeechState, SpeechStateMachine
-from .audio_capture import AudioCaptureStream
-from .streaming_stt import StreamingSTT
-from .streaming_llm import StreamingLLM
-from .kokoro_tts import StreamingTTS
-from .memory.service import MemoryService
-from .memory.context import ContextBuilder
-from .reasoning import ReasoningEngine
-from .proactive import (
+from config import PaaroSettings, settings
+from security import SecurityContext, security_context
+from silero_vad import SileroVAD
+from speech_state_machine import SpeechState, SpeechStateMachine
+from audio_capture import AudioCaptureStream
+from streaming_stt import StreamingSTT
+from streaming_llm import StreamingLLM
+from kokoro_tts import StreamingTTS
+from memory.service import MemoryService
+from memory.context import ContextBuilder
+from reasoning import ReasoningEngine
+from proactive import (
     EventBus,
     EventEvaluator,
     EventSeverity,
@@ -168,7 +168,7 @@ class RealtimeVoicePipeline:
         # Computer Control Subsystem (Step 9)
         if self.config.COMPUTER_CONTROL_ENABLED:
             try:
-                from .computer import computer_controller
+                from computer import computer_controller
                 self.computer = computer_controller
                 self.computer.add_listener(self._broadcast_event)
             except Exception as e:

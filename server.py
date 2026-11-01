@@ -13,12 +13,12 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .config import settings
-from .security import security_context
-from .realtime_pipeline import RealtimeVoicePipeline
-from .reasoning import ExecutionPlan, PlanStep, TaskComplexity
-from .tool_gateway import tool_gateway, PolicyDecision
-from .computer import (
+from config import settings
+from security import security_context
+from realtime_pipeline import RealtimeVoicePipeline
+from reasoning import ExecutionPlan, PlanStep, TaskComplexity
+from tool_gateway import tool_gateway, PolicyDecision
+from computer import (
     computer_controller,
     ComputerAction,
     ComputerActionType,
@@ -141,7 +141,7 @@ app.add_middleware(
 )
 
 
-from .memory.models import MemoryCategory
+from memory.models import MemoryCategory
 
 # REST Models
 class EmergencyStopRequest(BaseModel):
@@ -666,7 +666,7 @@ async def create_new_session(user_id: Optional[str] = None):
 # Proactive Intelligence & Action Engine Endpoints (Step 7)
 # -------------------------------------------------------------------------
 
-from .proactive.events import EventSeverity, ProactiveEvent
+from proactive.events import EventSeverity, ProactiveEvent
 
 @app.post("/api/proactive/event")
 async def emit_proactive_event(req: ProactiveEventRequest):

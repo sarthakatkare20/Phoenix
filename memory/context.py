@@ -7,8 +7,8 @@ import logging
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from .models import ConversationTurn, Memory
-from .service import MemoryService
+from memory.models import ConversationTurn, Memory
+from memory.service import MemoryService
 
 logger = logging.getLogger("paaro.memory.context")
 

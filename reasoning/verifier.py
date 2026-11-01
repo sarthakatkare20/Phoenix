@@ -6,7 +6,7 @@ Validates actual goal achievement instead of assuming success from execution alo
 import logging
 from typing import Any, Dict, Optional
 
-from .models import ExecutionPlan, PlanStep, StepStatus, VerificationResult
+from reasoning.models import ExecutionPlan, PlanStep, StepStatus, VerificationResult
 
 logger = logging.getLogger("paaro.reasoning.verifier")
 
