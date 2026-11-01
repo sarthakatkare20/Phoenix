@@ -54,8 +54,8 @@ export async function fetchSystemStats(): Promise<SystemStats | null> {
       const data = (await res.json()) as SystemStats
       return {
         ...data,
-        batteryPercent: localBatLevel ?? data.batteryPercent,
-        isCharging: localIsCharging ?? data.isCharging,
+        batteryPercent: data.batteryPercent ?? localBatLevel,
+        isCharging: data.isCharging ?? localIsCharging,
       }
     }
   } catch {

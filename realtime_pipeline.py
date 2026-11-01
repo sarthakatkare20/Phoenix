@@ -5,6 +5,7 @@ Connects Audio Capture -> Silero VAD -> Speech State Machine -> Security Layer -
 
 import logging
 import queue
+import re
 import threading
 import time
 from typing import Any, Callable, Dict, List, Optional
@@ -201,6 +202,7 @@ class RealtimeVoicePipeline:
         self._false_barge_in_count = 0
         self._last_barge_in_to_audio_stop_ms = 0.0
         self._tts_playback_start_time: Optional[float] = None
+        self._last_user_voice_time: float = 0.0
 
         # Listen for TTS playback start/end to track playback window
         if self.tts:
@@ -284,13 +286,55 @@ class RealtimeVoicePipeline:
     def _on_stt_event(self, event: Dict[str, Any]) -> None:
         self._broadcast_event(event)
 
-        # On final STT transcript, automatically trigger streaming LLM or reasoning if enabled
+        # On final STT transcript, evaluate wake word & filter background noise before triggering LLM
         if event.get("type") == "stt" and event.get("status") == "final":
             text = event.get("text", "").strip()
-            if text and not self.security.is_emergency_stopped:
-                if self._async_loop and self._async_loop.is_running():
-                    import asyncio
-                    asyncio.run_coroutine_threadsafe(self._process_llm_stream(text), self._async_loop)
+            if not text or self.security.is_emergency_stopped:
+                return
+
+            # 1. Filter out short noise bursts & known Whisper empty hallucinations
+            clean_lower = re.sub(r"[^\w\s]", "", text.lower()).strip()
+            if len(clean_lower) < 3:
+                return
+
+            hallucination_phrases = {
+                "innings", "if you need us", "i could call my dutch", "thank you",
+                "thanks for watching", "subtitles", "subtitles by", "you", "so",
+                "bye", "okay", "um", "uh", "music", "laughter", "applause",
+            }
+            if clean_lower in hallucination_phrases:
+                logger.info("Filtered ambient Whisper hallucination: '%s'", text)
+                return
+
+            # 2. Check wake word presence or ongoing conversation window
+            wake_words = ["hey phoenix", "hey jarvis", "phoenix", "phenix", "feenix", "fennix", "jarvis"]
+            has_wake_word = any(w in clean_lower for w in wake_words)
+            in_active_conversation = (time.time() - self._last_user_voice_time) < 10.0
+
+            if not has_wake_word and not in_active_conversation:
+                logger.info("Ignoring ambient speech (no wake word / not in conversation): '%s'", text)
+                return
+
+            self._last_user_voice_time = time.time()
+
+            # 3. Strip wake word prefix from text
+            prompt = text
+            for w in wake_words:
+                prompt = re.sub(rf"^\s*{w}[,\s\.\?!]*", "", prompt, flags=re.IGNORECASE).strip()
+
+            if not prompt:
+                # User just called the assistant name: "Hey Phoenix!"
+                logger.info("Wake word acknowledged for '%s'", text)
+                if self.tts and not self.security.is_emergency_stopped:
+                    self.tts.on_llm_start()
+                    self.tts.feed_text_delta("Yes, sir? Standing by.")
+                    self.tts.flush_text()
+                return
+
+            # 4. Dispatch the actual user prompt
+            if self._async_loop and self._async_loop.is_running():
+                import asyncio
+                asyncio.run_coroutine_threadsafe(self._process_llm_stream(prompt), self._async_loop)
 
     async def _process_llm_stream(self, prompt: str) -> None:
         if self.security.is_emergency_stopped:

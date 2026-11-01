@@ -1,8 +1,8 @@
 {
-  "name": "jarvis",
+  "name": "phoenix",
   "private": true,
   "version": "0.0.0",
-  "description": "A browser voice assistant with an Iron Man holographic interface, driven by Claude Code through a small Node bridge.",
+  "description": "An autonomous browser voice assistant and personal agency operating system with an Iron Man holographic interface.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -12,6 +12,7 @@
     "start": "node scripts/start.mjs",
     "start:hermes": "node scripts/start.mjs --hermes",
     "dev": "vite",
+    "backend": "python -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",

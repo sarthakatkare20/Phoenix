@@ -10,12 +10,12 @@ import time
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from paaro.config import PaaroSettings
-from paaro.security import SecurityContext
-from paaro.tool_gateway import PolicyDecision, PolicyEngine, ToolGateway
-from paaro.memory.service import MemoryService
-from paaro.proactive.events import EventSeverity, ProactiveEvent
-from paaro.reasoning.models import (
+from config import PaaroSettings
+from security import SecurityContext
+from tool_gateway import PolicyDecision, PolicyEngine, ToolGateway
+from memory.service import MemoryService
+from proactive.events import EventSeverity, ProactiveEvent
+from reasoning.models import (
     ExecutionPlan,
     PlanStatus,
     PlanStep,
@@ -24,12 +24,12 @@ from paaro.reasoning.models import (
     TaskComplexity,
     VerificationResult,
 )
-from paaro.reasoning.classifier import TaskComplexityClassifier
-from paaro.reasoning.planner import PlanGenerator, PlanValidator
-from paaro.reasoning.executor import PlanExecutor
-from paaro.reasoning.verifier import PlanVerifier
-from paaro.reasoning.replanner import Replanner
-from paaro.reasoning.engine import ReasoningEngine
+from reasoning.classifier import TaskComplexityClassifier
+from reasoning.planner import PlanGenerator, PlanValidator
+from reasoning.executor import PlanExecutor
+from reasoning.verifier import PlanVerifier
+from reasoning.replanner import Replanner
+from reasoning.engine import ReasoningEngine
 
 
 class TestTaskComplexityClassifier(unittest.IsolatedAsyncioTestCase):

@@ -7,13 +7,13 @@ import time
 import unittest
 import numpy as np
 
-from paaro.config import PaaroSettings
-from paaro.security import SecurityContext
-from paaro.speech_state_machine import SpeechState, SpeechStateMachine
-from paaro.audio_playback import AudioPlaybackQueue
-from paaro.kokoro_tts import BaseTTSBackend, StreamingTTS
-from paaro.streaming_llm import StreamingLLM
-from paaro.realtime_pipeline import RealtimeVoicePipeline
+from config import PaaroSettings
+from security import SecurityContext
+from speech_state_machine import SpeechState, SpeechStateMachine
+from audio_playback import AudioPlaybackQueue
+from kokoro_tts import BaseTTSBackend, StreamingTTS
+from streaming_llm import StreamingLLM
+from realtime_pipeline import RealtimeVoicePipeline
 
 
 class MockTTSBackend(BaseTTSBackend):

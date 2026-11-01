@@ -10,12 +10,12 @@ Measures:
 
 import time
 import os
-from paaro.tool_gateway import PolicyEngine, ToolGateway
-from paaro.computer.filesystem import SafePathResolver
-from paaro.computer.urls import SafeUrlOpener
-from paaro.computer.processes import ProcessController
-from paaro.computer.controller import ComputerController
-from paaro.computer.models import ComputerAction, ComputerActionType
+from tool_gateway import PolicyEngine, ToolGateway
+from computer.filesystem import SafePathResolver
+from computer.urls import SafeUrlOpener
+from computer.processes import ProcessController
+from computer.controller import ComputerController
+from computer.models import ComputerAction, ComputerActionType
 
 def run_benchmarks():
     print("==================== COMPUTER CONTROL BENCHMARKS ====================")

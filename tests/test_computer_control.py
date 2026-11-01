@@ -13,26 +13,26 @@ import time
 import unittest
 from unittest.mock import MagicMock, patch
 
-from paaro.config import PaaroSettings
-from paaro.security import SecurityContext
-from paaro.tool_gateway import PolicyDecision, PolicyEngine, ToolGateway
-from paaro.computer.models import (
+from config import PaaroSettings
+from security import SecurityContext
+from tool_gateway import PolicyDecision, PolicyEngine, ToolGateway
+from computer.models import (
     ComputerAction,
     ComputerActionResult,
     ComputerActionType,
     ComputerVerificationResult,
 )
-from paaro.computer.apps import ApplicationRegistry
-from paaro.computer.filesystem import SafePathResolver
-from paaro.computer.urls import SafeUrlOpener
-from paaro.computer.processes import ProcessController
-from paaro.computer.controller import ComputerController
-from paaro.reasoning.models import ExecutionPlan, PlanStatus, PlanStep, StepStatus, TaskComplexity
-from paaro.reasoning.classifier import TaskComplexityClassifier
-from paaro.reasoning.planner import PlanGenerator, PlanValidator
-from paaro.reasoning.executor import PlanExecutor
-from paaro.reasoning.engine import ReasoningEngine
-from paaro.proactive.events import EventSeverity, ProactiveEvent
+from computer.apps import ApplicationRegistry
+from computer.filesystem import SafePathResolver
+from computer.urls import SafeUrlOpener
+from computer.processes import ProcessController
+from computer.controller import ComputerController
+from reasoning.models import ExecutionPlan, PlanStatus, PlanStep, StepStatus, TaskComplexity
+from reasoning.classifier import TaskComplexityClassifier
+from reasoning.planner import PlanGenerator, PlanValidator
+from reasoning.executor import PlanExecutor
+from reasoning.engine import ReasoningEngine
+from proactive.events import EventSeverity, ProactiveEvent
 
 
 class TestApplicationRegistry(unittest.TestCase):

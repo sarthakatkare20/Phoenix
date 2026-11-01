@@ -58,6 +58,20 @@ class ConnectionManager:
         }
         await websocket.send_text(json.dumps(initial_event))
 
+        # Send Bridge-compatible ready frame so the HUD links all systems!
+        ready_event = {
+            "type": "ready",
+            "servers": [
+                "phoenix-core",
+                "gemini-3.5-flash-lite",
+                "faster-whisper (stt)",
+                "kokoro (tts)",
+                "system-telemetry",
+                "tool-gateway",
+            ],
+        }
+        await websocket.send_text(json.dumps(ready_event))
+
     def disconnect(self, websocket: WebSocket):
         self.active_connections.discard(websocket)
         logger.info("Client disconnected. Remaining connections: %d", len(self.active_connections))
@@ -237,7 +251,10 @@ class ReasoningConfigRequest(BaseModel):
 @app.get("/health")
 async def health_check():
     return {
+        "ok": True,
         "status": "ok",
+        "stt": bool(pipeline and pipeline.stt),
+        "tts": bool(pipeline and pipeline.tts),
         "pipeline_running": pipeline.is_running if pipeline else False,
         "vad_state": pipeline.current_state.value if pipeline else "unknown",
         "stt_enabled": bool(pipeline and pipeline.stt),
@@ -264,7 +281,24 @@ async def get_vad_status():
             "silence_duration": pipeline.state_machine.silence_duration_sec if pipeline else settings.VAD_SILENCE_DURATION,
             "sample_rate": settings.AUDIO_SAMPLE_RATE,
             "frame_ms": settings.AUDIO_FRAME_MS,
-        }
+        },
+    }
+
+
+@app.get("/api/stats")
+async def get_system_stats():
+    import psutil
+    import time
+    vm = psutil.virtual_memory()
+    bat = psutil.sensors_battery()
+    return {
+        "cpuPercent": round(psutil.cpu_percent(interval=None) or 15.0, 1),
+        "ramPercent": round(vm.percent, 1),
+        "ramUsedGb": f"{vm.used / (1024**3):.1f}",
+        "ramTotalGb": f"{vm.total / (1024**3):.1f}",
+        "uptimeMinutes": int((time.time() - psutil.boot_time()) / 60),
+        "batteryPercent": round(bat.percent) if bat else None,
+        "isCharging": bat.power_plugged if bat else None,
     }
 
 
@@ -346,10 +380,11 @@ async def update_vad_config(cfg: VadConfigRequest):
 @app.get("/api/llm/status")
 async def get_llm_status():
     llm_active = bool(pipeline and pipeline.llm)
+    provider, active_model = pipeline.llm.get_active_provider() if (pipeline and pipeline.llm) else ("none", "none")
     return {
         "llm_enabled": llm_active,
-        "model": settings.LLM_MODEL,
-        "ollama_url": settings.OLLAMA_URL,
+        "provider": provider,
+        "model": active_model,
         "temperature": settings.LLM_TEMPERATURE,
         "max_tokens": settings.LLM_MAX_TOKENS,
         "stream_buffer_ms": settings.LLM_STREAM_BUFFER_MS,
@@ -953,6 +988,7 @@ async def update_computer_config(cfg: ComputerConfigRequest):
     }
 
 
+@app.websocket("/")
 @app.websocket("/ws")
 @app.websocket("/ws/vad")
 @app.websocket("/api/vad/ws")
@@ -963,9 +999,63 @@ async def websocket_endpoint(websocket: WebSocket):
             raw_data = await websocket.receive_text()
             try:
                 data = json.loads(raw_data)
-                action = data.get("action")
+                action = data.get("action") or data.get("type")
                 if action == "ping":
                     await websocket.send_text(json.dumps({"type": "pong"}))
+                elif action == "ask":
+                    prompt = data.get("text", "").strip()
+                    ask_id = data.get("id", "a0")
+                    if prompt and pipeline and pipeline.llm and not security_context.is_emergency_stopped:
+                        async def handle_ask_stream(p: str, qid: str):
+                            full_text = ""
+                            try:
+                                # Note: Browser UI manages its own TTS speaker and lip-sync with the 3D Arc Reactor.
+                                # We stream tokens over WebSocket; do not duplicate speech on backend sounddevice.
+                                async for event in pipeline.llm.stream_response(p, session_id=pipeline.active_session_id):
+                                    st = event.get("status")
+                                    if st == "delta":
+                                        chunk = event.get("text", "")
+                                        full_text += chunk
+                                        await websocket.send_text(json.dumps({
+                                            "type": "text",
+                                            "delta": chunk,
+                                            "ask": qid,
+                                        }))
+                                    elif st == "tool_request":
+                                        await websocket.send_text(json.dumps({
+                                            "type": "tool",
+                                            "name": event.get("tool", ""),
+                                            "ask": qid,
+                                        }))
+                                    elif st == "error":
+                                        await websocket.send_text(json.dumps({
+                                            "type": "error",
+                                            "message": event.get("message", "Generation failed"),
+                                            "ask": qid,
+                                        }))
+                                        return
+                                await websocket.send_text(json.dumps({
+                                    "type": "done",
+                                    "text": full_text,
+                                    "ask": qid,
+                                }))
+                            except Exception as e:
+                                logger.error("Error during WebSocket ask streaming: %s", e)
+                                await websocket.send_text(json.dumps({
+                                    "type": "error",
+                                    "message": str(e),
+                                    "ask": qid,
+                                }))
+
+                        asyncio.create_task(handle_ask_stream(prompt, ask_id))
+                elif action in ("interrupt", "cancel"):
+                    if pipeline:
+                        if pipeline.tts:
+                            pipeline.tts.cancel()
+                        if pipeline.llm:
+                            pipeline.llm.cancel()
+                        if pipeline.reasoning:
+                            pipeline.reasoning.cancel_active_plan()
                 elif action == "emergency_stop":
                     security_context.trigger_emergency_stop(data.get("reason", "WebSocket command"))
                 elif action == "clear_emergency_stop":

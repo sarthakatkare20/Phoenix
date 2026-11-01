@@ -14,11 +14,11 @@ import unittest
 import numpy as np
 import time
 
-from paaro.config import PaaroSettings
-from paaro.security import SecurityContext
-from paaro.silero_vad import SileroVAD
-from paaro.speech_state_machine import SpeechStateMachine, SpeechState
-from paaro.realtime_pipeline import RealtimeVoicePipeline
+from config import PaaroSettings
+from security import SecurityContext
+from silero_vad import SileroVAD
+from speech_state_machine import SpeechStateMachine, SpeechState
+from realtime_pipeline import RealtimeVoicePipeline
 
 
 class TestSileroVAD(unittest.TestCase):

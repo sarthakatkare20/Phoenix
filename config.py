@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class PaaroSettings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", ".env.local"),
         env_file_encoding="utf-8",
         extra="ignore"
     )
@@ -33,30 +33,37 @@ class PaaroSettings(BaseSettings):
     WHISPER_DEVICE: str = "cpu"       # "cpu" or "cuda"
     WHISPER_COMPUTE_TYPE: str = "int8" # "int8", "float16", "float32"
     STT_UPDATE_INTERVAL: float = 0.4  # Incremental partial transcription interval in seconds (~400ms)
-    STT_LANGUAGE: Optional[str] = "en" # "en" or None for auto-detection
+    STT_LANGUAGE: Optional[str] = None # Auto-detect English, Hindi, Hinglish
     WHISPER_BEAM_SIZE: int = 1        # Beam size for fast decoding (1 = greedy)
     WHISPER_TEMPERATURE: float = 0.0  # Temperature for decoding
     WHISPER_CONDITION_ON_PREVIOUS_TEXT: bool = False  # Avoid hallucinations
     WHISPER_NO_SPEECH_THRESHOLD: float = 0.6  # Probability threshold for no speech
-    STT_MIN_AUDIO_DURATION: float = 0.2  # Minimum seconds of audio to attempt transcription
+    STT_MIN_AUDIO_DURATION: float = 0.5  # Minimum seconds of audio to attempt transcription (ignores micro-noises)
 
-    # Large Language Model (LLM) Configuration (Ollama / Local LLM)
+    # Large Language Model (LLM) Configuration (Gemini / Groq / Ollama)
     LLM_ENABLED: bool = True
+    LLM_PROVIDER: str = "auto"  # "auto", "gemini", "groq", "ollama"
+    GEMINI_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-3.5-flash-lite"
+    GROQ_API_KEY: Optional[str] = None
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
     OLLAMA_URL: str = "http://localhost:11434"
     LLM_MODEL: str = "llama3.2:3b"  # "llama3.2:3b", "hermes3:latest"
     LLM_TEMPERATURE: float = 0.7
     LLM_MAX_TOKENS: int = 250
     LLM_STREAM_BUFFER_MS: float = 30.0  # Delta buffering duration in milliseconds
     LLM_SYSTEM_PROMPT: str = (
-        "You are JARVIS, an ultra-crisp, highly capable AI assistant. "
-        "Keep spoken voice answers direct, natural, and under 50 words unless asked for more. "
-        "Do not use markdown, code blocks, or emojis in spoken replies."
+        "You are PHOENIX, an ultra-crisp, highly capable AI assistant and agency operating system. "
+        "Keep spoken voice answers direct, natural, and under 40 words unless asked for more. "
+        "Do not use markdown, code blocks, or emojis in spoken replies. "
+        "Bilingual fluency: If the user speaks in Hindi or Hinglish, reply in natural, respectful Hinglish. "
+        "If the user speaks in English, reply in English."
     )
 
     # Text-to-Speech (TTS) Configuration (Kokoro / Local Synthesis)
     TTS_ENABLED: bool = True
     TTS_ENGINE: str = "kokoro"  # "kokoro", "pyttsx3", "mock"
-    TTS_VOICE: str = "af_sarah" # Kokoro voices: "af_sarah", "af_bella", "am_adam", "am_michael", "bf_emma"
+    TTS_VOICE: str = "bm_george" # Kokoro voices: "bm_george" (British Male Jarvis), "am_adam", "af_sarah"
     TTS_SPEED: float = 1.0
     TTS_SAMPLE_RATE: int = 24000  # 24kHz for Kokoro
     TTS_CHUNK_MIN_CHARS: int = 20  # Minimum characters before soft punctuation chunking

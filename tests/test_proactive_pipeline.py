@@ -10,23 +10,23 @@ import time
 import unittest
 from unittest.mock import MagicMock, patch
 
-from paaro.config import PaaroSettings
-from paaro.security import SecurityContext
-from paaro.tool_gateway import PolicyDecision, PolicyEngine, ToolGateway
-from paaro.speech_state_machine import SpeechState, SpeechStateMachine
-from paaro.kokoro_tts import StreamingTTS
-from paaro.proactive.events import (
+from config import PaaroSettings
+from security import SecurityContext
+from tool_gateway import PolicyDecision, PolicyEngine, ToolGateway
+from speech_state_machine import SpeechState, SpeechStateMachine
+from kokoro_tts import StreamingTTS
+from proactive.events import (
     EventSeverity,
     ProactiveDecision,
     ProactiveDecisionType,
     ProactiveEvent,
     UserActivityState,
 )
-from paaro.proactive.event_bus import EventBus
-from paaro.proactive.evaluator import EventEvaluator
-from paaro.proactive.queue import ProactiveEventQueue
-from paaro.proactive.brain import ProactiveBrain
-from paaro.proactive.engine import ProactiveEngine
+from proactive.event_bus import EventBus
+from proactive.evaluator import EventEvaluator
+from proactive.queue import ProactiveEventQueue
+from proactive.brain import ProactiveBrain
+from proactive.engine import ProactiveEngine
 
 
 class TestEventBus(unittest.TestCase):

@@ -104,12 +104,9 @@ class TaskComplexityClassifier:
     async def classify(self, user_prompt: str) -> TaskComplexity:
         """
         Classify user request complexity.
-        Uses deterministic fast path; if ambiguous and LLM is present, uses LLM classification.
+        Uses ultra-fast deterministic regex classification (<0.1ms).
         """
-        deterministic = self.classify_deterministic(user_prompt)
-        if deterministic != TaskComplexity.DIRECT or not self.llm:
-            return deterministic
-        return await self.classify_with_llm(user_prompt)
+        return self.classify_deterministic(user_prompt)
 
     async def classify_with_llm(self, user_prompt: str) -> TaskComplexity:
         """

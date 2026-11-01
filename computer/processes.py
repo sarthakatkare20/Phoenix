@@ -48,9 +48,9 @@ class ProcessController:
     KNOWN_SERVICES: Dict[str, Dict[str, Any]] = {
         "paaro_backend": {
             "name": "Paaro Backend Server",
-            "cmd": ["python", "-m", "paaro.server"],
+            "cmd": ["python", "-m", "uvicorn", "server:app", "--host", "127.0.0.1", "--port", "8000"],
             "port": 8000,
-            "filter": "paaro.server",
+            "filter": "server:app",
         },
         "ollama": {
             "name": "Ollama LLM Engine",

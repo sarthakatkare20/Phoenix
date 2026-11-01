@@ -17,10 +17,10 @@ import asyncio
 import time
 import unittest
 
-from paaro.config import PaaroSettings
-from paaro.security import SecurityContext
-from paaro.tool_gateway import PolicyDecision, PolicyEngine, ToolGateway
-from paaro.streaming_llm import StreamingLLM
+from config import PaaroSettings
+from security import SecurityContext
+from tool_gateway import PolicyDecision, PolicyEngine, ToolGateway
+from streaming_llm import StreamingLLM
 
 
 class TestStreamingLLM(unittest.IsolatedAsyncioTestCase):

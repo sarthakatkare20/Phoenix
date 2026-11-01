@@ -209,6 +209,9 @@ class StreamingTTS:
     def on_llm_start(self, timestamp: Optional[float] = None, generation_id: Optional[str] = None) -> None:
         """Called when LLM generation begins."""
         self.cancel()
+        if isinstance(timestamp, str) and generation_id is None:
+            generation_id = timestamp
+            timestamp = time.time()
         self._session_start_time = timestamp or time.time()
         self._current_generation_id = generation_id
         self.playback.set_generation_id(generation_id)

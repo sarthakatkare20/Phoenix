@@ -23,11 +23,11 @@ import scipy.signal
 import soundfile as sf
 from faster_whisper import WhisperModel
 
-from paaro.config import PaaroSettings
-from paaro.security import SecurityContext
-from paaro.speech_state_machine import SpeechState
-from paaro.streaming_stt import StreamingSTT
-from paaro.realtime_pipeline import RealtimeVoicePipeline
+from config import PaaroSettings
+from security import SecurityContext
+from speech_state_machine import SpeechState
+from streaming_stt import StreamingSTT
+from realtime_pipeline import RealtimeVoicePipeline
 
 _SHARED_MODEL = None
 

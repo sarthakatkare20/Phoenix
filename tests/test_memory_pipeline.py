@@ -12,15 +12,15 @@ import time
 import unittest
 from unittest.mock import MagicMock, patch
 
-from paaro.config import PaaroSettings
-from paaro.security import SecurityContext
-from paaro.tool_gateway import PolicyDecision, ToolGateway
-from paaro.memory.models import ConversationTurn, Memory, MemoryCategory, Session, TurnStatus
-from paaro.memory.store import SQLiteMemoryStore
-from paaro.memory.retrieval import MemoryRetriever
-from paaro.memory.service import MemoryService
-from paaro.memory.context import ContextBuilder
-from paaro.streaming_llm import StreamingLLM
+from config import PaaroSettings
+from security import SecurityContext
+from tool_gateway import PolicyDecision, ToolGateway
+from memory.models import ConversationTurn, Memory, MemoryCategory, Session, TurnStatus
+from memory.store import SQLiteMemoryStore
+from memory.retrieval import MemoryRetriever
+from memory.service import MemoryService
+from memory.context import ContextBuilder
+from streaming_llm import StreamingLLM
 
 
 class TestMemoryStoreAndPersistence(unittest.TestCase):
