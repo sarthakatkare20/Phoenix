@@ -20,6 +20,8 @@ from computer.apps import ApplicationRegistry
 from computer.filesystem import SafePathResolver
 from computer.urls import SafeUrlOpener
 from computer.processes import ProcessController
+from computer.media import control_media, play_music
+from computer.system import minimize_all, restore_all, lock_workstation, get_system_diagnostics
 from config import PaaroSettings, settings
 
 logger = logging.getLogger("paaro.computer.controller")
@@ -128,6 +130,44 @@ class ComputerController:
             )
         elif atype == ComputerActionType.FOCUS_APP:
             res = self.focus_app(action.target)
+        elif atype == ComputerActionType.MEDIA_CONTROL:
+            sub = action.args.get("action") or action.target or "play_pause"
+            q = action.args.get("query")
+            if q:
+                m_res = play_music(query=q, platform=action.args.get("platform", "spotify"))
+            else:
+                m_res = control_media(sub)
+            res = ComputerActionResult(
+                success=m_res.get("ok", True),
+                action="media_control",
+                target=action.target,
+                result=m_res,
+                verification=ComputerVerificationResult(
+                    verified=m_res.get("ok", True),
+                    reason=f"Media action '{sub}' executed",
+                ),
+            )
+        elif atype == ComputerActionType.SYSTEM_CONTROL:
+            sub = (action.args.get("action") or action.target or "").lower()
+            if sub in ("minimize", "minimize_all"):
+                ok = minimize_all()
+                msg = "Minimized all windows"
+            elif sub in ("restore", "restore_all"):
+                ok = restore_all()
+                msg = "Restored all windows"
+            elif sub in ("lock", "lock_pc", "lock_workstation"):
+                ok = lock_workstation()
+                msg = "Workstation locked"
+            else:
+                ok = False
+                msg = f"Unknown system control action '{sub}'"
+            res = ComputerActionResult(
+                success=ok,
+                action="system_control",
+                target=sub,
+                result={"action": sub, "ok": ok},
+                verification=ComputerVerificationResult(verified=ok, reason=msg),
+            )
         elif atype == ComputerActionType.GET_SYSTEM_STATE:
             state = self.get_system_state()
             res = ComputerActionResult(

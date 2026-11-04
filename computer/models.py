@@ -21,6 +21,8 @@ class ComputerActionType(str, Enum):
     CHECK_PROCESS = "check_process"
     FOCUS_APP = "focus_app"
     GET_SYSTEM_STATE = "get_system_state"
+    MEDIA_CONTROL = "media_control"
+    SYSTEM_CONTROL = "system_control"
 
 
 @dataclass

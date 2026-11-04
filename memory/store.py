@@ -172,6 +172,33 @@ class SQLiteMemoryStore:
                     )
         return sessions
 
+    def rename_session(self, session_id: str, new_title: str) -> bool:
+        with self._lock:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT metadata FROM sessions WHERE id = ?", (session_id,))
+                row = cursor.fetchone()
+                if not row:
+                    return False
+                meta = json.loads(row["metadata"]) if row["metadata"] else {}
+                meta["title"] = new_title
+                meta["custom_title"] = True
+                cursor.execute(
+                    "UPDATE sessions SET metadata = ?, updated_at = ? WHERE id = ?",
+                    (json.dumps(meta), time.time(), session_id),
+                )
+                conn.commit()
+                return True
+
+    def delete_session(self, session_id: str) -> bool:
+        with self._lock:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM conversation_turns WHERE session_id = ?", (session_id,))
+                cursor.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+                conn.commit()
+                return cursor.rowcount > 0
+
     # -------------------------------------------------------------------------
     # Conversation Turns
     # -------------------------------------------------------------------------

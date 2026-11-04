@@ -1,0 +1,80 @@
+{
+  "id": "session_2026-10-30_00-19-20",
+  "title": "What is the time?",
+  "provider": "gemini-3.5-flash",
+  "created_at": "2026-10-29T18:49:20.314Z",
+  "updated_at": "2026-10-29T18:52:42.960Z",
+  "turn_count": 14,
+  "turns": [
+    {
+      "role": "user",
+      "text": "What is the time?",
+      "timestamp": "2026-10-29T18:49:56.256Z"
+    },
+    {
+      "role": "assistant",
+      "text": "I'm afraid I do not have access to your local system clock at the",
+      "timestamp": "2026-10-29T18:50:02.933Z"
+    },
+    {
+      "role": "user",
+      "text": "Gelmiş Autopay खोलूं?",
+      "timestamp": "2026-10-29T18:50:35.982Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Agar aapko payment process karni hai, toh bilkul khool dijiye, sir.",
+      "timestamp": "2026-10-29T18:50:40.766Z"
+    },
+    {
+      "role": "user",
+      "text": "अरे Spotify खोलने बोल रहा हूँ मैं",
+      "timestamp": "2026-10-29T18:50:51.011Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Spotify khol raha hoon, sir.",
+      "timestamp": "2026-10-29T18:50:55.551Z"
+    },
+    {
+      "role": "user",
+      "text": "तुम्हें पता है एक cyclone चल रहा है India में।",
+      "timestamp": "2026-10-29T18:51:42.505Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Ji Sarthak sir, Bay of Bengal aur weather tracking par meri poori nazar hai.",
+      "timestamp": "2026-10-29T18:51:47.307Z"
+    },
+    {
+      "role": "user",
+      "text": "और Cyclone Arnab के क्या report है?",
+      "timestamp": "2026-10-29T18:51:58.853Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Cyclone Arnab ki filhaal koi active report nahi hai, sir. Indian Meteorological Department ne aisa koi bulletin",
+      "timestamp": "2026-10-29T18:52:04.449Z"
+    },
+    {
+      "role": "user",
+      "text": "cyclone Arnab क्या है?",
+      "timestamp": "2026-10-29T18:52:19.965Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Official weather records mein Arnab naam ka koi cyclone nahi hai, sir. IMD ki official storm list mein yeh naam darj nahi hai.",
+      "timestamp": "2026-10-29T18:52:24.287Z"
+    },
+    {
+      "role": "user",
+      "text": "एक बार Google पर check करो।",
+      "timestamp": "2026-10-29T18:52:36.091Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Main check kar raha hoon, sir.",
+      "timestamp": "2026-10-29T18:52:42.960Z"
+    }
+  ]
+}

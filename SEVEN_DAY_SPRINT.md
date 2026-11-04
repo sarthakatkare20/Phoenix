@@ -1,4 +1,4 @@
-# PHOENIX — 7-DAY BATTLE PLAN (THE MVP SPRINT) ⚡
+https://github.com/NousResearch/hermes-agent# PHOENIX — 7-DAY BATTLE PLAN (THE MVP SPRINT) ⚡
 > **Target**: In 7 days, transform Phoenix from a disconnected collection of files into a fully working, fast, local voice assistant + agency co-pilot with zero paid subscription dependencies.
 > **Daily Commitment**: ~1.5 to 2 hours per day.
 

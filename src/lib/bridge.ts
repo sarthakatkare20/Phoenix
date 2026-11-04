@@ -248,6 +248,18 @@ function connect(): Promise<WebSocket> {
       settle(null)
       onConnection?.(everConnected ? 'reconnected' : 'open')
       everConnected = true
+
+      ws.addEventListener('message', (e) => {
+        try {
+          const msg = JSON.parse(e.data)
+          if (msg.type === 'stt' && msg.text) {
+            const w = window as unknown as Record<string, unknown>
+            if (typeof w.__setLiveCaption === 'function') {
+              (w.__setLiveCaption as (t: string) => void)(msg.text)
+            }
+          }
+        } catch {}
+      })
     }
     ws.onerror = () => {
       /**

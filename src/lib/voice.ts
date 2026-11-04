@@ -77,6 +77,9 @@ const WAKE_DEBOUNCE = 1500
  * used to be silently discarded, so the wake word "just didn't work" with no
  * indication why. Better a rare false wake than a name that does not answer.
  */
+const DIRECT_COMMAND =
+  /^(?:open|launch|start|stop|close|play|pause|search|google|call|what|who|where|how|why|when|tell|show|can you|bhai|suno|sunna|kholo|chalao|batao)\b/i
+
 const WAKE =
   /\b(?:hey|hi|ok|okay|yo)?\s*(?:phoenix|phenix|feenix|fennix|penix|phoenx|jarvis|jarvys|jervis|travis|jarviss|java's|jarv)\b(?!'s)/i
 
@@ -480,6 +483,7 @@ async function startElevenVoice(h: VoiceHandlers): Promise<Voice> {
 
       diag.heard = said
       diag.heardAt = Date.now()
+      h.onPartial(said)
 
       if (mode === 'guard') {
         // Genuine user interruption confirmed by non-echo transcript
@@ -493,7 +497,13 @@ async function startElevenVoice(h: VoiceHandlers): Promise<Voice> {
           diag.dropped = ''
           diag.accepted++
           h.onWake(afterWake(said))
-        } else {
+        } else if (DIRECT_COMMAND.test(said.trim()) && Date.now() - lastWake > WAKE_DEBOUNCE) {
+        lastWake = Date.now()
+        diag.wakes++
+        diag.dropped = ''
+        diag.accepted++
+        h.onWake(said.trim())
+      } else {
           drop(`heard "${said.slice(-40)}" — not his name`)
         }
         return
@@ -670,6 +680,12 @@ function startBrowserVoice(h: VoiceHandlers): Voice {
         diag.dropped = ''
         diag.accepted++
         h.onWake(afterWake(text))
+      } else if (DIRECT_COMMAND.test(text.trim()) && Date.now() - lastWake > WAKE_DEBOUNCE) {
+        lastWake = Date.now()
+        diag.wakes++
+        diag.dropped = ''
+        diag.accepted++
+        h.onWake(text.trim())
       } else {
         drop(`heard "${text.slice(-40)}" — not his name`)
       }
@@ -685,7 +701,7 @@ function startBrowserVoice(h: VoiceHandlers): Voice {
     clearSilence()
     // Endpoint on a short quiet gap; the ElevenLabs path tunes this more
     // finely, but a fixed window is plenty for the fallback.
-    silenceTimer = setTimeout(emit, 900)
+    silenceTimer = setTimeout(emit, 480)
   }
 
   const onResult = (e: any) => {
@@ -712,12 +728,26 @@ function startBrowserVoice(h: VoiceHandlers): Voice {
 
     if (mode === 'wake') {
       settled += fresh
+      if (heard) {
+        h.onPartial(heard)
+        clearSilence()
+        silenceTimer = setTimeout(() => {
+          h.onPartial('')
+          reset()
+        }, 2500)
+      }
       if (WAKE.test(heard) && Date.now() - lastWake > WAKE_DEBOUNCE) {
         lastWake = Date.now()
         diag.wakes++
         const trailing = afterWake(heard)
         reset()
         h.onWake(trailing)
+      } else if (DIRECT_COMMAND.test(heard.trim()) && Date.now() - lastWake > WAKE_DEBOUNCE) {
+        lastWake = Date.now()
+        diag.wakes++
+        const cmd = heard.trim()
+        reset()
+        h.onWake(cmd)
       } else if (settled.length > 400) {
         settled = ''
       }
@@ -765,7 +795,7 @@ function startBrowserVoice(h: VoiceHandlers): Voice {
     rec = new Ctor()
     rec.continuous = true
     rec.interimResults = true
-    rec.lang = 'en-GB'
+    rec.lang = 'en-IN' // Indian English for accurate accent recognition
     rec.onstart = () => {
       running = true
       diag.running = true

@@ -1,0 +1,98 @@
+{
+  "id": "session_2026-10-29_18-08-36",
+  "title": "Open Spotify",
+  "provider": "claude",
+  "created_at": "2026-10-29T12:38:36.719Z",
+  "updated_at": "2026-10-29T12:41:07.888Z",
+  "turn_count": 16,
+  "turns": [
+    {
+      "role": "user",
+      "text": "Open Spotify",
+      "timestamp": "2026-10-29T12:39:07.525Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Not logged in · Please run /login",
+      "timestamp": "2026-10-29T12:39:08.013Z",
+      "costUsd": 0
+    },
+    {
+      "role": "user",
+      "text": "Why isn't Spotify opened yet?",
+      "timestamp": "2026-10-29T12:39:58.771Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Not logged in · Please run /login",
+      "timestamp": "2026-10-29T12:39:58.920Z",
+      "costUsd": 0
+    },
+    {
+      "role": "user",
+      "text": "[clicking]",
+      "timestamp": "2026-10-29T12:40:07.557Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Not logged in · Please run /login",
+      "timestamp": "2026-10-29T12:40:07.584Z",
+      "costUsd": 0
+    },
+    {
+      "role": "user",
+      "text": "[clicking]",
+      "timestamp": "2026-10-29T12:40:15.191Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Not logged in · Please run /login",
+      "timestamp": "2026-10-29T12:40:15.205Z",
+      "costUsd": 0
+    },
+    {
+      "role": "user",
+      "text": "[keyboard clacking]",
+      "timestamp": "2026-10-29T12:40:25.949Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Not logged in · Please run /login",
+      "timestamp": "2026-10-29T12:40:25.967Z",
+      "costUsd": 0
+    },
+    {
+      "role": "user",
+      "text": "[typing]",
+      "timestamp": "2026-10-29T12:40:31.154Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Not logged in · Please run /login",
+      "timestamp": "2026-10-29T12:40:31.169Z",
+      "costUsd": 0
+    },
+    {
+      "role": "user",
+      "text": "[clicking]",
+      "timestamp": "2026-10-29T12:40:35.412Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Not logged in · Please run /login",
+      "timestamp": "2026-10-29T12:40:35.428Z",
+      "costUsd": 0
+    },
+    {
+      "role": "user",
+      "text": "[outro jingle] [outro jingle]",
+      "timestamp": "2026-10-29T12:41:07.813Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Not logged in · Please run /login",
+      "timestamp": "2026-10-29T12:41:07.888Z",
+      "costUsd": 0
+    }
+  ]
+}

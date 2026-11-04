@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { Scene } from './scene/Scene'
-import { Hud } from './ui/Hud'
 import { Boot } from './ui/Boot'
 import { Ignition } from './ui/Ignition'
 import { Diagnostics } from './ui/Diagnostics'
+import { Hud } from './ui/Hud'
+import { Sidebar } from './ui/Sidebar'
 import { useStore } from './store'
 import { startVoice, type Voice, type VoiceMode } from './lib/voice'
 import { createSpeaker, cycleVoice, currentVoiceName } from './lib/tts'
@@ -171,11 +172,11 @@ export default function App() {
       return
     }
 
-    // Instant Iron Man verbal acknowledgment (<300ms) while background execution begins
+    // Dual-voice fix: Do not play preliminary filler acknowledgment so speech is clean & singular.
+    // The streaming LLM will immediately speak the natural, authoritative response.
     const instantAck = getInstantAck(said)
     if (instantAck) {
       filled = true
-      spk.say(instantAck)
     }
 
     try {
@@ -348,6 +349,13 @@ export default function App() {
 
   const onPartial = (text: string) => {
     store.getState().setCaption(text)
+  }
+
+  // Global listener for live partials from backend WebSocket
+  if (typeof window !== 'undefined') {
+    ;(window as unknown as Record<string, unknown>).__setLiveCaption = (text: string) => {
+      store.getState().setCaption(text)
+    }
   }
 
   const onVoiceError = (message: string) => {
@@ -764,6 +772,7 @@ export default function App() {
     <>
       <Scene />
       <Hud />
+      <Sidebar />
       <Boot />
       <Diagnostics />
       <Ignition onStart={() => void powerOn()} />

@@ -269,7 +269,13 @@ export function Hud() {
                 exit={{ opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 320, damping: 32 }}
               >
-                <span className="log-who">{t.role === 'user' ? 'YOU' : 'PHOENIX'}</span>
+                <span className={`log-who ${t.source === 'telegram' || t.text.includes('[Telegram') ? 'telegram-who' : ''}`}>
+                  {t.source === 'telegram' || t.text.includes('[Telegram')
+                    ? '📱 TELEGRAM'
+                    : t.role === 'user'
+                    ? 'YOU'
+                    : 'PHOENIX'}
+                </span>
                 {/* Only his half decodes. What the user said was never
                     transmitted from anywhere — dressing it up as machine
                     output would be a lie about where the words came from. */}
@@ -286,11 +292,13 @@ export function Hud() {
         {caption && (
           <motion.div
             className="caption"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, y: 10, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
           >
-            {caption}
+            <span className="caption-live-indicator" />
+            <span className="caption-text">{caption}</span>
           </motion.div>
         )}
       </AnimatePresence>

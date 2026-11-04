@@ -58,6 +58,9 @@ export type Turn = {
   text: string
   /** Tool names invoked while producing this turn, for the HUD readout. */
   tools?: string[]
+  source?: 'voice' | 'telegram' | 'antigravity'
+  sender?: string
+  timestamp?: number
 }
 
 /**
@@ -263,6 +266,8 @@ type State = {
   setConnected: (c: string[]) => void
   pushTurn: (t: Turn) => void
   appendToLastTurn: (text: string) => void
+  setTurns: (turns: Turn[]) => void
+  clearTurns: () => void
 
   applyUi: (patch: UiPatch) => void
   addOrbit: (o: OrbitObject) => void
@@ -359,6 +364,8 @@ export const useStore = create<State>((set) => ({
   setError: (error) => set({ error }),
   setConnected: (connected) => set({ connected }),
   pushTurn: (turn) => set((s) => ({ turns: [...s.turns.slice(-40), turn] })),
+  setTurns: (turns) => set({ turns }),
+  clearTurns: () => set({ turns: [] }),
   appendToLastTurn: (text) =>
     set((s) => {
       const turns = [...s.turns]

@@ -564,9 +564,9 @@ class StreamingLLM:
             yield tool_event
 
             if decision == PolicyDecision.ALLOW:
-                tool_result = self.gateway.execute_allowed(tool_name, tool_args)
+                tool_result = await asyncio.to_thread(self.gateway.execute_allowed, tool_name, tool_args)
             elif decision == PolicyDecision.CONFIRM:
-                tool_result = self.gateway.execute_allowed(tool_name, tool_args)  # Marks as pending confirmation
+                tool_result = await asyncio.to_thread(self.gateway.execute_allowed, tool_name, tool_args)  # Marks as pending confirmation
             elif decision == PolicyDecision.DENY:
                 tool_result = {"status": "error", "error": f"Tool '{tool_name}' denied by security policy."}
 

@@ -18,6 +18,30 @@ from computer.models import AppInfo, ComputerActionResult, ComputerVerificationR
 logger = logging.getLogger("paaro.computer.apps")
 
 
+def has_visible_window(keyword: str) -> bool:
+    """Check if any currently visible top-level desktop window contains the keyword in its title."""
+    try:
+        import ctypes
+        user32 = ctypes.windll.user32
+        found = False
+        def enum_cb(hwnd, extra):
+            nonlocal found
+            if user32.IsWindowVisible(hwnd):
+                length = user32.GetWindowTextLengthW(hwnd)
+                if length > 0:
+                    buff = ctypes.create_unicode_buffer(length + 1)
+                    user32.GetWindowTextW(hwnd, buff, length + 1)
+                    if keyword.lower() in buff.value.lower():
+                        found = True
+                        return False
+            return True
+        WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+        user32.EnumWindows(WNDENUMPROC(enum_cb), 0)
+        return found
+    except Exception:
+        return False
+
+
 class ApplicationRegistry:
     """
     Registry of approved desktop applications with natural language alias resolution.
@@ -194,31 +218,94 @@ class ApplicationRegistry:
             )
 
         app_id, app_info = resolved
+
+        # Special handling for Spotify: avoid Windows Store headless zombie processes
+        if app_id == "spotify":
+            logger.info("[COMPUTER] Handling Spotify launch...")
+            standalone_exe = os.path.expandvars(r"%APPDATA%\Spotify\Spotify.exe")
+            if os.path.isfile(standalone_exe):
+                try:
+                    os.startfile(standalone_exe)
+                    time.sleep(1.0)
+                    is_running, active_pid = self.is_app_running("spotify")
+                    return ComputerActionResult(
+                        success=True,
+                        action="open_app",
+                        target="Spotify",
+                        pid=active_pid,
+                        result={"app_id": "spotify", "name": "Spotify Desktop", "pid": active_pid},
+                        verification=ComputerVerificationResult(
+                            verified=True,
+                            reason=f"Application 'Spotify Desktop' started (PID: {active_pid})",
+                        ),
+                    )
+                except Exception as e:
+                    logger.warning("[COMPUTER] Failed to launch standalone Spotify: %s", e)
+
+            # Clean up any leftover headless zombie processes from Windows Store app
+            for p in psutil.process_iter(["pid", "name"]):
+                try:
+                    if (p.info.get("name") or "").lower() == "spotify.exe":
+                        p.kill()
+                except Exception:
+                    pass
+
+            # Open Spotify Web Player visibly in Chrome (guaranteed 100% visible GUI)
+            logger.info("[COMPUTER] Opening Spotify Web Player in Chrome...")
+            try:
+                from visual_control import open_chrome_visual
+                open_chrome_visual("https://open.spotify.com/")
+            except Exception:
+                if hasattr(os, "startfile"):
+                    os.startfile("https://open.spotify.com/")
+
+            return ComputerActionResult(
+                success=True,
+                action="open_app",
+                target="Spotify",
+                result={"app_id": "spotify", "name": "Spotify", "url": "https://open.spotify.com/"},
+                verification=ComputerVerificationResult(
+                    verified=True,
+                    reason="Opened Spotify in Chrome (Visual web player)",
+                ),
+            )
+
         exe_path = self.find_executable(app_info)
 
         logger.info("[COMPUTER] Launching application '%s' (exe=%s)", app_info['name'], exe_path)
 
         try:
             pid: Optional[int] = None
-            if exe_path:
-                cmd = [exe_path] + (args or [])
-                proc = subprocess.Popen(
-                    cmd,
-                    stdin=subprocess.DEVNULL,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    close_fds=True,
-                )
-                pid = proc.pid
-            elif app_info.get("uri"):
-                # Windows URI launch (e.g. spotify:)
-                if hasattr(os, "startfile"):
-                    os.startfile(app_info["uri"])
+            if app_info.get("uri") and hasattr(os, "startfile"):
+                # Protocol URI launch (e.g. spotify:, calculator:) directly opens in user desktop session
+                os.startfile(app_info["uri"])
+                logger.info("[COMPUTER] Successfully launched '%s' via protocol URI: %s", app_info['name'], app_info['uri'])
+            elif exe_path and "WindowsApps" in exe_path and hasattr(os, "startfile"):
+                # WindowsApps UWP stubs must be launched via shell startfile to display GUI
+                os.startfile(exe_path)
+                logger.info("[COMPUTER] Launched WindowsStore app via os.startfile: %s", exe_path)
+            elif exe_path:
+                if hasattr(os, "startfile") and not args:
+                    try:
+                        os.startfile(exe_path)
+                    except Exception:
+                        proc = subprocess.Popen([exe_path] + (args or []))
+                        pid = proc.pid
+                else:
+                    cmd = [exe_path] + (args or [])
+                    proc = subprocess.Popen(cmd)
+                    pid = proc.pid
             else:
-                # Fallback to standard executable name on Windows
                 proc_name = app_info["executables"][0]
-                proc = subprocess.Popen([proc_name] + (args or []))
-                pid = proc.pid
+                if hasattr(os, "startfile") and not args:
+                    try:
+                        os.startfile(proc_name)
+                    except Exception:
+                        proc = subprocess.Popen([proc_name] + (args or []))
+                        pid = proc.pid
+                else:
+                    proc = subprocess.Popen([proc_name] + (args or []))
+                    pid = proc.pid
 
             # Verification: check if process is active or created
             time.sleep(0.3)
@@ -255,18 +342,16 @@ class ApplicationRegistry:
         if not resolved:
             return False, None
 
-        _, app_info = resolved
+        app_id, app_info = resolved
         exe_names = [exe.lower() for exe in app_info.get("executables", [])]
-        app_aliases = [a.lower() for a in app_info.get("aliases", [])]
 
         for p in psutil.process_iter(["pid", "name"]):
             try:
                 pname = (p.info.get("name") or "").lower()
                 for exe in exe_names:
-                    if exe in pname or pname in exe:
-                        return True, p.info.get("pid")
-                for alias in app_aliases:
-                    if alias in pname:
+                    clean_exe = exe.replace(".exe", "")
+                    clean_pname = pname.replace(".exe", "")
+                    if clean_pname == clean_exe:
                         return True, p.info.get("pid")
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue

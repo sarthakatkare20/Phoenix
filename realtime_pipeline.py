@@ -306,13 +306,19 @@ class RealtimeVoicePipeline:
                 logger.info("Filtered ambient Whisper hallucination: '%s'", text)
                 return
 
-            # 2. Check wake word presence or ongoing conversation window
+            # 2. Check wake word presence, direct actionable commands, or active conversation window
             wake_words = ["hey phoenix", "hey jarvis", "phoenix", "phenix", "feenix", "fennix", "jarvis"]
+            direct_command_keywords = (
+                "open", "launch", "start", "stop", "close", "play", "pause", "search",
+                "google", "call", "what", "who", "where", "how", "why", "when",
+                "tell", "show", "can you", "bhai", "suno", "sunna", "kholo", "chalao", "batao"
+            )
             has_wake_word = any(w in clean_lower for w in wake_words)
-            in_active_conversation = (time.time() - self._last_user_voice_time) < 10.0
+            has_direct_command = any(clean_lower.startswith(cmd + " ") or clean_lower == cmd for cmd in direct_command_keywords)
+            in_active_conversation = (time.time() - self._last_user_voice_time) < 30.0
 
-            if not has_wake_word and not in_active_conversation:
-                logger.info("Ignoring ambient speech (no wake word / not in conversation): '%s'", text)
+            if not has_wake_word and not has_direct_command and not in_active_conversation:
+                logger.info("Ignoring ambient speech (no wake word / direct command / conversation): '%s'", text)
                 return
 
             self._last_user_voice_time = time.time()

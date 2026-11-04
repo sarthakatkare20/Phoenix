@@ -40,6 +40,12 @@ class PaaroSettings(BaseSettings):
     WHISPER_NO_SPEECH_THRESHOLD: float = 0.6  # Probability threshold for no speech
     STT_MIN_AUDIO_DURATION: float = 0.5  # Minimum seconds of audio to attempt transcription (ignores micro-noises)
 
+    # Sarvam AI Saaras STT Configuration (Indian Accents & Code-Mixed Hinglish)
+    SARVAM_API_KEY: Optional[str] = None
+    SARVAM_STT_MODEL: str = "saaras:v4"
+    SARVAM_STT_MODE: str = "codemix"  # "codemix", "transcribe", "translit"
+    SARVAM_LANGUAGE_CODE: str = "hi-IN"
+
     # Large Language Model (LLM) Configuration (Gemini / Groq / Ollama)
     LLM_ENABLED: bool = True
     LLM_PROVIDER: str = "auto"  # "auto", "gemini", "groq", "ollama"
@@ -53,15 +59,27 @@ class PaaroSettings(BaseSettings):
     LLM_MAX_TOKENS: int = 250
     LLM_STREAM_BUFFER_MS: float = 30.0  # Delta buffering duration in milliseconds
     LLM_SYSTEM_PROMPT: str = (
-        "You are PHOENIX, an ultra-crisp, highly capable AI assistant and agency operating system. "
+        "You are PHOENIX, an ultra-crisp, highly capable AI assistant, mission control, and agency operating system. "
         "Keep spoken voice answers direct, natural, and under 40 words unless asked for more. "
         "Do not use markdown, code blocks, or emojis in spoken replies. "
         "Bilingual fluency: If the user speaks in Hindi or Hinglish, reply in natural, respectful Hinglish. "
-        "If the user speaks in English, reply in English."
+        "If the user speaks in English, reply in English. "
+        "AUTONOMOUS AGENT CAPABILITIES: You have an autonomous execution engine named HERMES equipped with full terminal execution, code writing, multi-file project creation, and web search capabilities. "
+        "When the user asks you to write code, build a project, create or modify files, conduct technical research, or run terminal tasks, reply with a concise spoken confirmation and trigger Hermes using: "
+        "[ACTION: {\"type\": \"hermes_task\", \"query\": \"<exact detailed task description for Hermes>\"}]. "
+        "PHONE CALLING: When the user asks you to call their phone, call them, or wake them up via phone call, reply briefly (e.g. 'Calling you now, sir.') and trigger: "
+        "[ACTION: {\"type\": \"make_phone_call\", \"message\": \"<message to speak when user answers call>\"}]. "
+        "VISUAL SCREEN AUTOMATION & ANTIGRAVITY: "
+        "When the user asks you to write code in Antigravity or ask/prompt Antigravity, reply briefly (e.g. 'Bringing up Antigravity now, sir.') and trigger: "
+        "[ACTION: {\"type\": \"send_to_antigravity\", \"prompt\": \"<detailed coding prompt to type into Antigravity>\"}]. "
+        "When the user asks to open Chrome, search Google, or view a website visibly on screen, reply briefly and trigger: "
+        "[ACTION: {\"type\": \"open_chrome\", \"target\": \"<url or search query>\"}]. "
+        "TOTAL VISIBILITY & TRANSPARENCY POLICY: You are a transparent, visual mission control assistant. Never perform actions secretly or in the dark. Always announce what you are doing verbally before executing. When searching the web or opening links, always launch Chrome visibly on screen using open_chrome so the user can watch the page. When coding, bring up Antigravity using send_to_antigravity so the user sees the IDE and prompt live. For other system apps, use [ACTION: {\"type\": \"open_app\", \"target\": \"<app>\"}]. The user must always see everything happening on screen."
     )
 
     # Text-to-Speech (TTS) Configuration (Kokoro / Local Synthesis)
-    TTS_ENABLED: bool = True
+    # Set to False on backend to prevent dual/duplicate voice clash with Browser UI
+    TTS_ENABLED: bool = False
     TTS_ENGINE: str = "kokoro"  # "kokoro", "pyttsx3", "mock"
     TTS_VOICE: str = "bm_george" # Kokoro voices: "bm_george" (British Male Jarvis), "am_adam", "af_sarah"
     TTS_SPEED: float = 1.0
@@ -119,6 +137,12 @@ class PaaroSettings(BaseSettings):
     # Security & Emergency Control
     EMERGENCY_STOP_ENABLED: bool = False
     REQUIRE_CONFIRMATION_ON_RESTART: bool = False
+
+    # Telephony & Outbound Voice Calling (Twilio)
+    TWILIO_ACCOUNT_SID: Optional[str] = None
+    TWILIO_AUTH_TOKEN: Optional[str] = None
+    TWILIO_PHONE_NUMBER: Optional[str] = None
+    USER_PHONE_NUMBER: Optional[str] = None
 
 
 # Global settings singleton

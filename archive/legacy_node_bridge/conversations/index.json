@@ -1,0 +1,32 @@
+[
+  {
+    "id": "session_2026-10-30_00-56-33",
+    "title": "Hi, Jabez",
+    "provider": "gemini-3.5-flash",
+    "created_at": "2026-10-29T19:26:33.236Z",
+    "updated_at": "2026-10-29T19:27:34.763Z",
+    "turn_count": 6,
+    "json_file": "Hi, Jabez.json",
+    "md_file": "Hi, Jabez.md"
+  },
+  {
+    "id": "session_2026-10-30_00-19-20",
+    "title": "What is the time?",
+    "provider": "gemini-3.5-flash",
+    "created_at": "2026-10-29T18:49:20.314Z",
+    "updated_at": "2026-10-29T18:52:42.960Z",
+    "turn_count": 14,
+    "json_file": "What is the time.json",
+    "md_file": "What is the time.md"
+  },
+  {
+    "id": "session_2026-10-29_18-08-36",
+    "title": "Open Spotify",
+    "provider": "claude",
+    "created_at": "2026-10-29T12:38:36.719Z",
+    "updated_at": "2026-10-29T12:41:07.888Z",
+    "turn_count": 16,
+    "json_file": "Open Spotify.json",
+    "md_file": "Open Spotify.md"
+  }
+]

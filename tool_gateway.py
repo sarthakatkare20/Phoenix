@@ -51,6 +51,20 @@ class PolicyEngine:
         "check_server_status",
         "verify_endpoint",
         "analyze_test_failures",
+        "hermes_task",
+        "delegate_hermes",
+        "hermes_agent",
+        "coding_task",
+        "research_task",
+        "make_phone_call",
+        "call_user",
+        "phone_call",
+        "send_to_antigravity",
+        "antigravity_prompt",
+        "ask_antigravity",
+        "open_chrome",
+        "search_in_chrome",
+        "open_in_chrome",
     }
 
     # Destructive or outward-facing actions requiring user confirmation
@@ -212,11 +226,79 @@ class ToolGateway:
         self.register_handler("focus_app", lambda args: controller.focus_app(args.get("target") or args.get("app_name") or args.get("app", "")).to_dict())
         self.register_handler("get_system_state", lambda args: controller.get_system_state())
 
+    def register_telephony_tools(self) -> None:
+        """Register outbound voice calling handlers."""
+        try:
+            from telephony import make_phone_call
+
+            def _call_handler(args: Dict[str, Any]) -> Dict[str, Any]:
+                msg = args.get("message") or args.get("text") or args.get("prompt") or "Phoenix priority transmission."
+                to_num = args.get("to") or args.get("number") or args.get("phone")
+                voice = args.get("voice") or "Polly.Brian"
+                return make_phone_call(message=msg, to_number=to_num, voice=voice)
+
+            for t_name in ["make_phone_call", "call_user", "phone_call"]:
+                self.register_handler(t_name, _call_handler)
+            logger.info("Telephony voice call tools successfully registered in ToolGateway.")
+        except Exception as e:
+            logger.warning("Could not register Telephony tools: %s", e)
+        """Register autonomous Hermes Agent execution handlers."""
+        try:
+            from hermes_client import execute_hermes
+            import os
+
+            def _hermes_handler(args: Dict[str, Any]) -> Dict[str, Any]:
+                query = args.get("query") or args.get("task") or args.get("prompt") or args.get("target") or ""
+                cwd = args.get("cwd") or os.getcwd()
+                return execute_hermes(query, cwd=cwd)
+
+            for t_name in ["hermes_task", "delegate_hermes", "hermes_agent", "coding_task", "research_task"]:
+                self.register_handler(t_name, _hermes_handler)
+            logger.info("Hermes Agent tools successfully registered in ToolGateway.")
+        except Exception as e:
+            logger.warning("Could not register Hermes tools: %s", e)
+
+
+    def register_visual_tools(self) -> None:
+        """Register visual screen automation tools (Chrome open, Antigravity prompt injection)."""
+        try:
+            from visual_control import open_chrome_visual, send_to_antigravity
+
+            def _chrome_handler(args: Dict[str, Any]) -> Dict[str, Any]:
+                target = args.get("target") or args.get("url") or args.get("query") or ""
+                return open_chrome_visual(target)
+
+            def _antigravity_handler(args: Dict[str, Any]) -> Dict[str, Any]:
+                prompt = args.get("prompt") or args.get("query") or args.get("task") or args.get("text") or ""
+                return send_to_antigravity(prompt)
+
+            for t_name in ["open_chrome", "search_in_chrome", "open_in_chrome"]:
+                self.register_handler(t_name, _chrome_handler)
+            for t_name in ["send_to_antigravity", "antigravity_prompt", "ask_antigravity"]:
+                self.register_handler(t_name, _antigravity_handler)
+            logger.info("Visual automation tools successfully registered in ToolGateway.")
+        except Exception as e:
+            logger.warning("Could not register visual automation tools: %s", e)
 
 # Global ToolGateway singleton
 tool_gateway = ToolGateway()
 try:
     tool_gateway.register_computer_tools()
+except Exception as e:
+    logger.debug("Deferred computer tool registration: %s", e)
+
+try:
+    tool_gateway.register_hermes_tools()
+except Exception as e:
+    logger.debug("Deferred hermes tool registration: %s", e)
+
+try:
+    tool_gateway.register_telephony_tools()
+except Exception as e:
+    logger.debug("Deferred telephony tool registration: %s", e)
+
+try:
+    tool_gateway.register_visual_tools()
 except Exception as e:
     logger.debug("Deferred computer tool registration: %s", e)
 

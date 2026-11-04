@@ -177,28 +177,32 @@ function score(v: SpeechSynthesisVoice): number {
   const n = v.name.toLowerCase()
   let s = 0
 
-  // The macOS British male, and the closest thing to the character available
-  // without leaving the machine.
-  if (n.startsWith('daniel')) s += 100
-  else if (n.includes('google uk english male')) s += 85
-  else if (/\b(oliver|arthur|jamie|malcolm)\b/.test(n)) s += 80
-  // Newer macOS en-GB male voices — casual, but serviceable.
-  else if (/\b(reed|rocko|eddy)\b/.test(n)) s += 40
+  // Offline Female Voice priority (Zira on Windows, Heera/Veena for Indian English, Samantha, Sarah)
+  if (/\b(zira|heera|veena|samantha|serena|sarah|victoria|karen|ava|zoe|allison|flo|sandy)\b/i.test(n)) {
+    s += 120
+  } else if (n.includes('female')) {
+    s += 90
+  }
 
-  // Higher-quality variants of whatever matched above.
-  if (n.includes('premium')) s += 30
-  else if (n.includes('enhanced')) s += 20
+  // Indian English bonus
+  if (/en[-_]in/i.test(v.lang)) {
+    s += 40
+  } else if (/^en/i.test(v.lang)) {
+    s += 10
+  }
 
-  if (/en[-_]gb/i.test(v.lang)) s += 25
-  else if (/^en/i.test(v.lang)) s += 5
+  // Quality variants
+  if (n.includes('natural') || n.includes('online')) s += 30
+  if (n.includes('enhanced') || n.includes('premium')) s += 20
 
-  // Voices that clearly aren't a butler.
+  // Penalize male voices since Offline Female Voice is the user's locked preference
+  if (/\b(david|george|daniel|oliver|arthur|mark|richard|james|male)\b/i.test(n)) {
+    s -= 100
+  }
+
+  // Filter novelty voices
   if (/grandma|grandpa|bubbles|jester|bells|boing|whisper|zarvox|superstar|trinoids|wobble|bahh|organ|cellos|bad news|good news/.test(n)) {
     s -= 200
-  }
-  // Female-presenting names across the English sets.
-  if (/\b(flo|sandy|shelley|kate|serena|fiona|moira|karen|tessa|samantha|zoe|allison|ava|susan)\b/.test(n)) {
-    s -= 60
   }
 
   return s

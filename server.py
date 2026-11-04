@@ -9,7 +9,8 @@ import json
 import logging
 import os
 from typing import Any, Dict, List, Optional, Set
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Request, File, UploadFile
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -241,6 +242,45 @@ class PlanExecutionRequest(BaseModel):
     session_id: Optional[str] = None
 
 
+
+class SessionRenameRequest(BaseModel):
+    title: str
+
+
+class TrustedUserCreateRequest(BaseModel):
+    name: str
+    telegram_id: str
+    role: Optional[str] = "Authorized Operator"
+
+
+class PermissionUpdateRequest(BaseModel):
+    key: str
+    level: str
+    requires_approval: bool
+
+
+class TelegramCommandRequest(BaseModel):
+    command: str
+    sender_id: Optional[str] = "98234110"
+    sender_name: Optional[str] = "Sarthak"
+
+
+class SettingsUpdateRequest(BaseModel):
+    category: str
+    updates: Dict[str, Any]
+
+
+class ActivityLogRequest(BaseModel):
+    source: str
+    action: str
+    status: Optional[str] = "executed"
+    details: Optional[str] = ""
+    sender: Optional[str] = "System"
+
+
+class ApprovalResolveRequest(BaseModel):
+    approved: bool
+
 class ReasoningConfigRequest(BaseModel):
     enabled: Optional[bool] = None
     max_steps: Optional[int] = None
@@ -253,7 +293,7 @@ async def health_check():
     return {
         "ok": True,
         "status": "ok",
-        "stt": bool(pipeline and pipeline.stt),
+        "stt": False,
         "tts": bool(pipeline and pipeline.tts),
         "pipeline_running": pipeline.is_running if pipeline else False,
         "vad_state": pipeline.current_state.value if pipeline else "unknown",
@@ -337,6 +377,66 @@ async def update_stt_config(cfg: SttConfigRequest):
         "beam_size": pipeline.config.WHISPER_BEAM_SIZE,
         "temperature": pipeline.config.WHISPER_TEMPERATURE,
     }
+
+
+@app.post("/stt")
+async def unified_browser_stt(request: Request, file: Optional[UploadFile] = None):
+    """Unified STT endpoint for browser audio segments. Uses Sarvam Saaras V4."""
+    try:
+        from sarvam_stt import sarvam_client
+        audio_bytes = b""
+        if file:
+            audio_bytes = await file.read()
+        else:
+            audio_bytes = await request.body()
+
+        if not audio_bytes:
+            return {"text": "", "error": "Empty audio"}
+
+        if sarvam_client.is_configured:
+            res = await sarvam_client.transcribe_async(
+                audio_bytes,
+                model=getattr(settings, "SARVAM_STT_MODEL", "saaras:v4"),
+                mode=getattr(settings, "SARVAM_STT_MODE", "codemix"),
+                language_code=getattr(settings, "SARVAM_LANGUAGE_CODE", "hi-IN"),
+            )
+            if res is not None:
+                return {
+                    "text": res.get("transcript", ""),
+                    "provider": "sarvam",
+                    "request_id": res.get("raw", {}).get("request_id"),
+                }
+
+        return {"text": "", "warning": "SARVAM_API_KEY is not configured in .env.local"}
+    except Exception as e:
+        logger.error("Unified STT error: %s", e)
+        return {"text": "", "error": str(e)}
+
+
+@app.post("/api/stt/sarvam")
+async def transcribe_with_sarvam(
+    file: UploadFile = File(...),
+    model: str = "saaras:v4",
+    mode: str = "codemix",
+    language_code: str = "hi-IN"
+):
+    try:
+        from sarvam_stt import sarvam_client
+        if not sarvam_client.is_configured:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "SARVAM_API_KEY is not configured in .env.local or settings."}
+            )
+        audio_bytes = await file.read()
+        res = await sarvam_client.transcribe_async(
+            audio_bytes, model=model, mode=mode, language_code=language_code
+        )
+        if not res:
+            return JSONResponse(status_code=500, content={"error": "Sarvam STT failed to transcribe"})
+        return {"status": "success", "transcript": res["transcript"], "data": res}
+    except Exception as e:
+        logger.error("Error in Sarvam STT endpoint: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/vad/start")
@@ -651,6 +751,232 @@ async def get_current_session():
     }
 
 
+
+
+@app.get("/api/conversations")
+async def list_conversation_sessions(limit: int = 30):
+    """List historical conversation sessions with first turn preview for ChatGPT-style drawer."""
+    if not pipeline or not pipeline.memory_service:
+        return {"conversations": [], "count": 0, "status": "memory_disabled"}
+
+    store = pipeline.memory_service.store
+    sessions = store.list_sessions(user_id=settings.DEFAULT_USER_ID, limit=limit)
+    res = []
+    for s in sessions:
+        turns = store.get_session_turns(s.id, limit=2)
+        preview = "New Conversation"
+        origin = "voice"
+        if s.metadata and s.metadata.get("title"):
+            preview = s.metadata["title"]
+        elif turns:
+            preview = turns[0].content[:60]
+            if "[Telegram" in preview or (s.metadata and s.metadata.get("source") == "telegram"):
+                origin = "telegram"
+        res.append({
+            "id": s.id,
+            "created_at": s.created_at,
+            "updated_at": s.updated_at,
+            "preview": preview,
+            "turn_count": len(store.get_session_turns(s.id, limit=100)),
+            "origin": origin,
+            "metadata": s.metadata,
+        })
+    return {"conversations": res, "count": len(res), "status": "ok"}
+
+
+@app.get("/api/conversations/{session_id}")
+async def get_conversation_session_turns(session_id: str):
+    """Retrieve all turns for a specific past session."""
+    if not pipeline or not pipeline.memory_service:
+        return {"turns": [], "session_id": session_id, "status": "memory_disabled"}
+
+    store = pipeline.memory_service.store
+    turns = store.get_session_turns(session_id, limit=100)
+    return {
+        "session_id": session_id,
+        "turns": [
+            {
+                "id": t.id,
+                "role": t.role,
+                "content": t.content,
+                "status": t.status.value if hasattr(t.status, "value") else str(t.status),
+                "timestamp": t.timestamp,
+                "tool_action": t.tool_action,
+                "tool_result": t.tool_result,
+            }
+            for t in turns
+        ],
+        "count": len(turns),
+        "status": "ok",
+    }
+
+
+@app.patch("/api/conversations/{session_id}")
+async def rename_conversation_session(session_id: str, req: SessionRenameRequest):
+    """Rename a conversation session title."""
+    if not pipeline or not pipeline.memory_service:
+        raise HTTPException(status_code=500, detail="Memory service not initialized")
+    success = pipeline.memory_service.store.rename_session(session_id, req.title)
+    if not success:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {"status": "renamed", "session_id": session_id, "title": req.title}
+
+
+@app.delete("/api/conversations/{session_id}")
+async def delete_conversation_session(session_id: str):
+    """Delete a conversation session and all its associated turns."""
+    if not pipeline or not pipeline.memory_service:
+        raise HTTPException(status_code=500, detail="Memory service not initialized")
+    success = pipeline.memory_service.store.delete_session(session_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {"status": "deleted", "session_id": session_id}
+
+
+# -------------------------------------------------------------------------
+# Mission Control & Security Sentinel APIs
+# -------------------------------------------------------------------------
+
+from mission_control import (
+    activity_sentinel,
+    security_sentinel,
+    settings_manager,
+    telegram_gateway,
+    get_initialization_status,
+)
+
+
+@app.get("/api/system/initialization-status")
+async def api_get_initialization_status():
+    """Startup checklist and subsystem readiness for Screen 01."""
+    return get_initialization_status()
+
+
+@app.get("/api/activity")
+async def api_get_activity_logs(filter: Optional[str] = "all", limit: int = 50):
+    """Centralized activity and audit logs filterable by source (all, voice, telegram, ide, system)."""
+    logs = activity_sentinel.list_logs(source_filter=filter, limit=limit)
+    return {"logs": logs, "count": len(logs), "filter": filter}
+
+
+@app.post("/api/activity/log")
+async def api_log_activity_event(req: ActivityLogRequest):
+    """Explicitly record an activity event into the central audit stream."""
+    entry = activity_sentinel.log_event(
+        source=req.source,
+        action=req.action,
+        status=req.status or "executed",
+        details=req.details or "",
+        sender=req.sender or "System",
+    )
+    return {"status": "logged", "entry": entry}
+
+
+@app.get("/api/security/trusted-users")
+async def api_get_trusted_users():
+    """List all authorized Telegram IDs and Mission Control users."""
+    return {
+        "trusted_users": security_sentinel.get_trusted_users(),
+        "remote_enabled": security_sentinel.remote_enabled,
+    }
+
+
+@app.post("/api/security/trusted-users")
+async def api_add_trusted_user(req: TrustedUserCreateRequest):
+    """Add a new trusted user / Telegram ID to the whitelist."""
+    user = security_sentinel.add_trusted_user(
+        name=req.name,
+        telegram_id=req.telegram_id,
+        role=req.role or "Authorized Operator",
+    )
+    return {"status": "added", "user": user}
+
+
+@app.delete("/api/security/trusted-users/{user_id}")
+async def api_remove_trusted_user(user_id: str):
+    """Remove a trusted user from the security whitelist."""
+    removed = security_sentinel.remove_trusted_user(user_id)
+    if not removed:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"status": "removed", "user_id": user_id}
+
+
+@app.get("/api/security/permissions")
+async def api_get_security_permissions():
+    """Access control permission matrix."""
+    return {
+        "permissions": security_sentinel.get_permissions(),
+        "remote_enabled": security_sentinel.remote_enabled,
+    }
+
+
+@app.post("/api/security/permissions")
+async def api_update_security_permission(req: PermissionUpdateRequest):
+    """Update a security permission level or approval requirement."""
+    updated = security_sentinel.update_permission(req.key, req.level, req.requires_approval)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Permission key not found")
+    return {"status": "updated", "permission": updated}
+
+
+@app.get("/api/security/remote/status")
+async def api_get_remote_status():
+    """Get status of the Telegram Remote Gateway and Emergency Kill Switch."""
+    return {"remote_enabled": security_sentinel.remote_enabled}
+
+
+@app.post("/api/security/remote/toggle")
+async def api_toggle_remote_status(req: Dict[str, bool]):
+    """Toggle the Telegram Remote Gateway Emergency Kill Switch."""
+    enabled = req.get("enabled", True)
+    res = security_sentinel.set_remote_enabled(enabled)
+    return {"remote_enabled": res}
+
+
+@app.get("/api/security/approvals")
+async def api_list_pending_approvals():
+    """List pending desktop approvals for sensitive operations."""
+    return {"approvals": security_sentinel.list_pending_approvals()}
+
+
+@app.post("/api/security/approvals/{approval_id}/resolve")
+async def api_resolve_approval(approval_id: str, req: ApprovalResolveRequest):
+    """Approve or reject a pending security action."""
+    resolved = security_sentinel.resolve_approval(approval_id, req.approved)
+    if not resolved:
+        raise HTTPException(status_code=404, detail="Approval request not found")
+    return {"status": "resolved", "approved": req.approved}
+
+
+@app.get("/api/telegram/status")
+async def api_get_telegram_status():
+    """Telegram Remote Gateway telemetry and connection status."""
+    return telegram_gateway.get_status()
+
+
+@app.post("/api/telegram/execute")
+async def api_execute_telegram_command(req: TelegramCommandRequest):
+    """Execute a command through the Telegram gateway lifecycle with security enforcement."""
+    result = await telegram_gateway.execute_command(
+        command=req.command,
+        sender_id=req.sender_id or "98234110",
+        sender_name=req.sender_name or "Sarthak",
+    )
+    return result
+
+
+@app.get("/api/settings/all")
+async def api_get_all_settings():
+    """Retrieve all Phoenix system and customization settings."""
+    return settings_manager.get_all()
+
+
+@app.post("/api/settings/update")
+async def api_update_settings(req: SettingsUpdateRequest):
+    """Update configuration settings in a specific category."""
+    updated = settings_manager.update_category(req.category, req.updates)
+    return {"status": "updated", "category": req.category, "settings": updated}
+
 @app.post("/api/session/new")
 async def create_new_session(user_id: Optional[str] = None):
     """Start a fresh conversation session."""
@@ -929,6 +1255,62 @@ async def execute_computer_action(req: ComputerActionRequest):
     return gw_res
 
 
+class HermesTaskRequest(BaseModel):
+    query: str
+    cwd: Optional[str] = None
+    timeout: Optional[int] = 180
+
+
+@app.post("/api/hermes/run")
+async def run_hermes_task_endpoint(req: HermesTaskRequest):
+    """Direct REST endpoint to execute an autonomous task with Hermes Agent."""
+    if security_context.is_emergency_stopped:
+        raise HTTPException(status_code=403, detail="System is emergency stopped.")
+    from hermes_client import execute_hermes_async
+    return await execute_hermes_async(req.query, cwd=req.cwd, timeout=req.timeout or 180)
+
+
+class PhoneCallRequest(BaseModel):
+    message: str
+    to: Optional[str] = None
+    voice: Optional[str] = "Polly.Brian"
+
+
+@app.post("/api/telephony/call")
+async def trigger_phone_call(req: PhoneCallRequest):
+    """Direct REST endpoint to trigger an outbound phone call via Twilio."""
+    if security_context.is_emergency_stopped:
+        raise HTTPException(status_code=403, detail="System is emergency stopped.")
+    from telephony import make_phone_call_async
+    return await make_phone_call_async(message=req.message, to_number=req.to, voice=req.voice or "Polly.Brian")
+
+
+class VisualChromeRequest(BaseModel):
+    target: str = ""
+
+
+class AntigravityPromptRequest(BaseModel):
+    prompt: str
+
+
+@app.post("/api/visual/chrome")
+async def open_chrome_endpoint(req: VisualChromeRequest):
+    """Visibly launch Google Chrome with the given URL or Google search query."""
+    if security_context.is_emergency_stopped:
+        raise HTTPException(status_code=403, detail="System is emergency stopped.")
+    from visual_control import open_chrome_visual_async
+    return await open_chrome_visual_async(req.target)
+
+
+@app.post("/api/visual/antigravity")
+async def send_to_antigravity_endpoint(req: AntigravityPromptRequest):
+    """Focus Antigravity IDE, focus chat prompt, type prompt, and submit."""
+    if security_context.is_emergency_stopped:
+        raise HTTPException(status_code=403, detail="System is emergency stopped.")
+    from visual_control import send_to_antigravity_async
+    return await send_to_antigravity_async(req.prompt)
+
+
 @app.get("/api/computer/apps")
 async def get_registered_apps():
     """List all registered desktop applications and their running status."""
@@ -1091,6 +1473,26 @@ async def websocket_endpoint(websocket: WebSocket):
                             "target": target,
                             "result": res,
                         }))
+                elif action in ("hermes_task", "hermes_run"):
+                    q = data.get("query") or data.get("text") or data.get("prompt", "")
+                    cwd_dir = data.get("cwd")
+                    qid = data.get("id", "h0")
+                    if q and not security_context.is_emergency_stopped:
+                        from hermes_client import execute_hermes_async
+                        async def _run_ws_hermes(query_text: str, req_id: str, workdir: Optional[str]):
+                            await websocket.send_text(json.dumps({
+                                "type": "tool",
+                                "name": "Hermes Agent",
+                                "ask": req_id,
+                            }))
+                            h_res = await execute_hermes_async(query_text, cwd=workdir)
+                            await websocket.send_text(json.dumps({
+                                "type": "hermes_result",
+                                "task": query_text,
+                                "result": h_res,
+                                "ask": req_id,
+                            }))
+                        asyncio.create_task(_run_ws_hermes(q, qid, cwd_dir))
                 elif action == "proactive_event":
                     ev_type = data.get("event_type")
                     if ev_type and pipeline and pipeline.proactive:
